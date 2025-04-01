@@ -1,0 +1,14 @@
+data
+.git
+results
+storage
+COPYING
+docker-compose.yml
+.gitignore
+README.md
+.env
+nohup.out
+.Rproj.user
+tau-mutant-geomx.Rproj
+R
+cache
