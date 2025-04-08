@@ -1,5 +1,20 @@
 ---
 title: "Tau Mutant GeoMx Analysis"
+author:
+  - name: "Emir Turkes and Naoto Watamura, UK DRI at UCL"
+date: '`r strftime(Sys.time(), format = "%B %d, %Y")`'
+link-citations: true
+output:
+  html_document:
+    code_folding: show
+    number_sections: true
+    theme: lumen
+    highlight: haddock
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
 knit: (function(inputFile, encoding) {
   rmarkdown::render(
     inputFile,
@@ -7,6 +22,19 @@ knit: (function(inputFile, encoding) {
     output_file = file.path("..", "results", "tau_mutant_geomx_analysis.html")
   )})
 ---
+
+<style type="text/css">
+body {font-size: 16px;}
+h1.title {font-size: 35px;}
+h1 {font-size: 24px;}
+h2 {font-size: 22px;}
+.toc-content {padding-left: 0px; padding-right: 0px;}
+div.tocify {width: 100%;}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em; padding-left: 25px; text-indent: 0;
+}
+div.main-container {max-width: none; width: 100%;}
+</style>
 
 ```{r}
 #    This file is part of tau-mutant-geomx.
