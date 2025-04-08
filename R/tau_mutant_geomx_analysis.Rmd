@@ -59,7 +59,11 @@ div.main-container {max-width: none; width: 100%;}
 # --------------
 library(conflicted)
 packages <- c("GeomxTools", "Seurat")
-invisible(suppressPackageStartupMessages(lapply(packages, FUN = library, character.only = TRUE)))
+invisible(
+  suppressPackageStartupMessages(
+    lapply(packages, FUN = library, character.only = TRUE)
+  )
+)
 # --------------
 
 # Add paths.
@@ -78,22 +82,29 @@ if (!dir.exists(cache_dir)) {
 # Paths to data.
 # --------------
 dcc <- dir(
-  file.path(data_dir, "external", "tau-mutant-geomx", "GeoMxPipeline"), pattern = ".dcc$", full.names = TRUE
+  file.path(data_dir, "external", "tau-mutant-geomx", "GeoMxPipeline"),
+  pattern = ".dcc$", full.names = TRUE
 )
-pkc <- file.path(data_dir, "external", "tau-mutant-geomx", "Mm_R_NGS_WTA_v1.0.pkc")
-anno <- file.path(data_dir, "external", "tau-mutant-geomx", "dufflab_20241126T1146", "AnalysisSampleSheet.xlsx")
+pkc <- file.path(
+  data_dir, "external", "tau-mutant-geomx", "Mm_R_NGS_WTA_v1.0.pkc"
+)
+anno <- file.path(
+  data_dir, "external", "tau-mutant-geomx",
+  "dufflab_20241126T1146", "AnalysisSampleSheet.xlsx"
+)
 # --------------
 
 # Create NanoStringGeoMxSet.
 # --------------------------
-rds <- file.path(cache_dir, "data.rds") # Cache object as it takes a long time to create.
+rds <- file.path(cache_dir, "data.rds") # Cache object due to slow execution.
 if (file.exists(rds)) {
   data <- readRDS(rds)
 } else {
   data <- suppressWarnings(
     readNanoStringGeoMxSet(
       dcc, pkc, anno,
-      phenoDataSheet = "Sheet1", protocolDataColNames = c("Genotype", "Bio_Rep", "Tech_Rep", "Slide_Rep")
+      phenoDataSheet = "Sheet1",
+      protocolDataColNames = c("Genotype", "Bio_Rep", "Tech_Rep", "Slide_Rep")
     )
   )
   saveRDS(data, file = rds)
@@ -117,7 +128,8 @@ low_saturation <- which(protocolData(data)$QCFlags$LowSaturation)
 colnames(assayData(data)$exprs[ , low_saturation])
 
 low_quality_probes <- which(
-  featureData(data)$QCFlags$LowProbeRatio | featureData(data)$QCFlags$GlobalGrubbsOutlier
+  featureData(data)$QCFlags$LowProbeRatio |
+    featureData(data)$QCFlags$GlobalGrubbsOutlier
 )
 length(low_quality_probes)
 
@@ -129,7 +141,9 @@ dim(data)
 data <- aggregateCounts(data) # Turn probe names into gene symbols.
 data.frame(assayData(data)$exprs[1:5, 1:2])
 
-data <- normalize(data, norm_method = "quant", desiredQuantile = 0.75, toElt = "q_norm") # Normalize data.
+data <- normalize( # Normalize data.
+  data, norm_method = "quant", desiredQuantile = 0.75, toElt = "q_norm"
+)
 data.frame(assayData(data)$q_norm[1:5, 1:2])
 ```
 
