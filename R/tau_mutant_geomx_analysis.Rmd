@@ -55,12 +55,12 @@ div.main-container {max-width: none; width: 100%;}
 #
 #    Emir Turkes can be contacted at emir.turkes@eturkes.com
 
-# Best way to load a bunch of packages without tons of messages being produced.
-# -----------------------------------------------------------------------------
+# Load packages.
+# --------------
 library(conflicted)
 packages <- c("GeomxTools", "Seurat")
 invisible(suppressPackageStartupMessages(lapply(packages, FUN = library, character.only = TRUE)))
-# -----------------------------------------------------------------------------
+# --------------
 
 # Add paths.
 # ----------
