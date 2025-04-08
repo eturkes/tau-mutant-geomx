@@ -8,8 +8,6 @@ knit: (function(inputFile, encoding) {
   )})
 ---
 
-# Data Cleaning and Prep
-
 ```{r}
 #    This file is part of tau-mutant-geomx.
 #    Copyright (C) 2025  Emir Turkes, Naoto Watamura, UK DRI at UCL
@@ -35,6 +33,83 @@ library(conflicted)
 packages <- c("GeomxTools", "Seurat")
 invisible(suppressPackageStartupMessages(lapply(packages, FUN = library, character.only = TRUE)))
 # -----------------------------------------------------------------------------
+
+# Add paths.
+# ----------
+data_dir <- file.path("..", "data")
+cache_dir <- file.path("..", "cache")
+if (!dir.exists(cache_dir)) {
+  dir.create(cache_dir, recursive = TRUE)
+}
+# ----------
+```
+
+# Data Prep
+
+```{r}
+# Paths to data.
+# --------------
+dcc <- dir(
+  file.path(data_dir, "external", "tau-mutant-geomx", "GeoMxPipeline"), pattern = ".dcc$", full.names = TRUE
+)
+pkc <- file.path(data_dir, "external", "tau-mutant-geomx", "Mm_R_NGS_WTA_v1.0.pkc")
+anno <- file.path(data_dir, "external", "tau-mutant-geomx", "dufflab_20241126T1146", "AnalysisSampleSheet.xlsx")
+# --------------
+
+# Create NanoStringGeoMxSet.
+# --------------------------
+rds <- file.path(cache_dir, "data.rds") # Cache object as it takes a long time to create.
+if (file.exists(rds)) {
+  data <- readRDS(rds)
+} else {
+  data <- suppressWarnings(
+    readNanoStringGeoMxSet(
+      dcc, pkc, anno,
+      phenoDataSheet = "Sheet1", protocolDataColNames = c("Genotype", "Bio_Rep", "Tech_Rep", "Slide_Rep")
+    )
+  )
+  saveRDS(data, file = rds)
+}
+# --------------------------
+
+data
+```
+
+# Quality Control
+
+```{r}
+data <- shiftCountsOne(data, useDALogic = TRUE) # Shift counts by one.
+
+# Flag samples and probes with low sequencing depth and saturation.
+# -----------------------------------------------------------------
+data <- setSegmentQCFlags(data, qcCutoffs = list(percentSaturation = 45))
+data <- setBioProbeQCFlags(data)
+
+low_saturation <- which(protocolData(data)$QCFlags$LowSaturation)
+colnames(assayData(data)$exprs[ , low_saturation])
+
+low_quality_probes <- which(
+  featureData(data)$QCFlags$LowProbeRatio | featureData(data)$QCFlags$GlobalGrubbsOutlier
+)
+length(low_quality_probes)
+
+data <- data[ , -low_saturation] # Remove those below QC thresholds.
+# -----------------------------------------------------------------
+
+dim(data)
+
+data <- aggregateCounts(data) # Turn probe names into gene symbols.
+data.frame(assayData(data)$exprs[1:5, 1:2])
+
+data <- normalize(data, norm_method = "quant", desiredQuantile = 0.75, toElt = "q_norm") # Normalize data.
+data.frame(assayData(data)$q_norm[1:5, 1:2])
+```
+
+# Create Seurat Object
+
+```{r}
+data <- as.Seurat(data, normData = "q_norm")
+data
 ```
 
 # References
