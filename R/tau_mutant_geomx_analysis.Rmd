@@ -1,3 +1,16 @@
+---
+title: "Tau Mutant GeoMx Analysis"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(
+    inputFile,
+    encoding = encoding,
+    output_file = file.path("..", "results", "tau_mutant_geomx_analysis.html")
+  )})
+---
+
+# Data Cleaning and Prep
+
+```{r}
 #    This file is part of tau-mutant-geomx.
 #    Copyright (C) 2025  Emir Turkes, Naoto Watamura, UK DRI at UCL
 #
@@ -16,21 +29,18 @@
 #
 #    Emir Turkes can be contacted at emir.turkes@eturkes.com
 
-version: "3"
+# Best way to load a bunch of packages without tons of messages being produced.
+# -----------------------------------------------------------------------------
+library(conflicted)
+packages <- c("GeomxTools", "Seurat")
+invisible(suppressPackageStartupMessages(lapply(packages, FUN = library, character.only = TRUE)))
+# -----------------------------------------------------------------------------
+```
 
-services:
-  all:
-    image: eturkes/tau-mutant-geomx:R4.4.3v2
-    volumes:
-      - ".:/home/rstudio/tau-mutant-geomx:rw"
-    command: Rscript -e "source('/home/rstudio/tau-mutant-geomx/R/run_all.R')"
+# References
 
-  rstudio:
-    image: eturkes/tau-mutant-geomx:R4.4.3v2
-    volumes:
-      - ".:/home/rstudio/tau-mutant-geomx:rw"
-    ports:
-      - "127.0.0.1:${PORT}:8787"
-    environment:
-      -  DISABLE_AUTH=true
-      -  RSTUDIO_SESSION_TIMEOUT=0
+This is the concluding section of the document, where we output the `sessionInfo`, and create a bibliography for works cited.
+
+```{r}
+sessionInfo()
+```
