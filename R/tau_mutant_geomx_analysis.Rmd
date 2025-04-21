@@ -136,7 +136,6 @@ QC_summary["TOTAL FLAGS", ] <- c(
 data <- data[, QC_results$LowReads == "FALSE"] # Only filter on library size.
 # -------------
 
-QC_results
 QC_summary
 
 # Probe level QC.
