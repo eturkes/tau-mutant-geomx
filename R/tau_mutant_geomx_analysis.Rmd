@@ -70,6 +70,11 @@ if (!dir.exists(cache_dir)) {
   dir.create(cache_dir, recursive = TRUE)
 }
 # ----------
+
+# Global settings.
+# ----------------
+knitr::opts_chunk$set(fig.width = 10, fig.height = 7, dpi = 96)
+# ----------------
 ```
 
 # Data Prep
