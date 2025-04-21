@@ -100,7 +100,7 @@ if (file.exists(rds)) {
     readNanoStringGeoMxSet(
       dcc, pkc, anno,
       phenoDataSheet = "Sheet1",
-      protocolDataColNames = c("Genotype", "Bio_Rep", "Tech_Rep", "Slide_Rep")
+      protocolDataColNames = c("genotype", "bio_rep", "tech_rep", "slide_rep")
     )
   )
   saveRDS(data, file = rds)
