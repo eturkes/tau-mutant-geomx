@@ -113,26 +113,47 @@ data
 # Quality Control
 
 ```{r}
-data <- shiftCountsOne(data, useDALogic = TRUE) # Shift counts by one.
+# ROI level QC.
+# -------------
+data <- shiftCountsOne(data, useDALogic = TRUE)
+data <- setSegmentQCFlags(data, qcCutoffs = list(minSegmentReads = 30000))
 
-# Flag samples and probes with low sequencing depth and saturation.
-# -----------------------------------------------------------------
-data <- setSegmentQCFlags(data, qcCutoffs = list(percentSaturation = 45))
+QC_results <- protocolData(data)$QCFlags
+QC_summary <- data.frame(
+  Pass = colSums(!QC_results[, colnames(QC_results)]),
+  Warning = colSums(QC_results[, colnames(QC_results)])
+)
+QC_results$Status <- apply(
+  QC_results, MARGIN = 1L, FUN = function(x) {
+    ifelse(sum(x) == 0L, yes = "PASS", no = "WARNING")
+  }
+)
+QC_summary["TOTAL FLAGS", ] <- c(
+  sum(QC_results[, "Status"] == "PASS"),
+  sum(QC_results[, "Status"] == "WARNING")
+)
+
+data <- data[, QC_results$LowReads == "FALSE"] # Only filter on library size.
+# -------------
+
+QC_results
+QC_summary
+
+# Probe level QC.
+# ---------------
 data <- setBioProbeQCFlags(data)
 
-low_saturation <- which(protocolData(data)$QCFlags$LowSaturation)
-colnames(assayData(data)$exprs[ , low_saturation])
-
-low_quality_probes <- which(
-  featureData(data)$QCFlags$LowProbeRatio |
-    featureData(data)$QCFlags$GlobalGrubbsOutlier
+QC_results <- fData(data)$QCFlags
+QC_summary <- data.frame(
+  Passed = sum(rowSums(QC_results[, -1]) == 0),
+  Global = sum(QC_results$GlobalGrubbsOutlier),
+  Local = sum(
+    rowSums(QC_results[, -2:-1]) > 0 & !QC_results$GlobalGrubbsOutlier
+  )
 )
-length(low_quality_probes)
+# ---------------
 
-data <- data[ , -low_saturation] # Remove those below QC thresholds.
-# -----------------------------------------------------------------
-
-dim(data)
+QC_summary # No removal needed.
 
 data <- aggregateCounts(data) # Turn probe names into gene symbols.
 data.frame(assayData(data)$exprs[1:5, 1:2])
