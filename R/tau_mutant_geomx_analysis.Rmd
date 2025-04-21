@@ -168,8 +168,8 @@ data.frame(assayData(data)$q_norm[1:5, 1:2])
 
 ```{r}
 data <- as.Seurat(data, normData = "q_norm")
-data$Genotype <- factor( # Rearrange order of labels.
-  data$Genotype, levels = c("MAPTKI", "P301S", "NLGF_MAPTKI", "NLGF_P301S")
+data$genotype <- factor( # Rearrange order of labels.
+  data$genotype, levels = c("MAPTKI", "P301S", "NLGF_MAPTKI", "NLGF_P301S")
 )
 data
 ```
@@ -184,7 +184,7 @@ data <- FindNeighbors(data, verbose = FALSE)
 data <- FindClusters(data, verbose = FALSE)
 data <- RunUMAP(data, dims = 1:30, verbose = FALSE)
 
-DimPlot(data, group.by = "Genotype")
+DimPlot(data, group.by = "genotype")
 ```
 
 # References
