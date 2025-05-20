@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM rocker/rstudio:4.4.3
+FROM rocker/rstudio:4.3.3
 
 LABEL org.opencontainers.image.authors="Emir Turkes emir.turkes@eturkes.com"
 
