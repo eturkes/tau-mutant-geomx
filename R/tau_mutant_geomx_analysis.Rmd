@@ -172,6 +172,9 @@ data.frame(assayData(data)$q_norm[1:5, 1:2])
 
 ```{r}
 data <- as.Seurat(data, normData = "q_norm")
+data <- RenameAssays(
+  data, assay.name = "GeoMx", new.assay.name = "RNA", verbose = FALSE
+)
 data$genotype <- factor( # Rearrange order of labels.
   data$genotype, levels = c("MAPTKI", "P301S", "NLGF_MAPTKI", "NLGF_P301S")
 )
@@ -181,8 +184,7 @@ data
 # Dimensionality Reduction
 
 ```{r}
-data <- FindVariableFeatures(data, verbose = FALSE)
-data <- ScaleData(data, verbose = FALSE)
+data <- SCTransform(data, verbose = FALSE)
 data <- RunPCA(data, npcs = 30, verbose = FALSE)
 data <- FindNeighbors(data, verbose = FALSE)
 data <- FindClusters(data, verbose = FALSE)

@@ -24,6 +24,7 @@ RUN apt-get update \
         -e "install.packages('Seurat')" \
         -e "install.packages('BiocManager')" \
         -e "BiocManager::install('GeomxTools')" \
+        -e "BiocManager::install('glmGamPoi')" \
     && apt-get clean \
     && rm -Rf /var/lib/apt/lists/ \
         /tmp/downloaded_packages/ \

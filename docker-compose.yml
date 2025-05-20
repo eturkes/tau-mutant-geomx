@@ -16,13 +16,13 @@ version: "3"
 
 services:
   all:
-    image: eturkes/tau-mutant-geomx:R4.3.3v1
+    image: eturkes/tau-mutant-geomx:R4.3.3v2
     volumes:
       - ".:/home/rstudio/tau-mutant-geomx:rw"
     command: Rscript -e "source('/home/rstudio/tau-mutant-geomx/R/run_all.R')"
 
   rstudio:
-    image: eturkes/tau-mutant-geomx:R4.3.3v1
+    image: eturkes/tau-mutant-geomx:R4.3.3v2
     volumes:
       - ".:/home/rstudio/tau-mutant-geomx:rw"
     ports:
