@@ -2,7 +2,8 @@ data
 .git
 results
 storage
-COPYING
+LICENSE
+NOTICE
 docker-compose.yml
 .gitignore
 README.md
@@ -12,3 +13,4 @@ nohup.out
 tau-mutant-geomx.Rproj
 R
 cache
+src
