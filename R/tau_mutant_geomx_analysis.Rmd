@@ -191,6 +191,15 @@ data <- RunUMAP(data, dims = 1:30, verbose = FALSE)
 DimPlot(data, group.by = "genotype")
 ```
 
+# Save Seurat Object
+
+```{r}
+rds <- file.path(cache_dir, "seurat.rds")
+if (!file.exists(rds)) {
+  saveRDS(data, file = rds)
+}
+```
+
 # References
 
 This is the concluding section of the document, where we output the `sessionInfo`, and create a bibliography for works cited.
