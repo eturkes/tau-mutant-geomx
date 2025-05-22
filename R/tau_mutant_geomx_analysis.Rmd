@@ -118,6 +118,15 @@ data
 # Quality Control
 
 ```{r}
+# Remove samples later known to be outliers.
+# ------------------------------------------
+remove <- c(
+  "DSP-1001660019825-A-H04.dcc", "DSP-1001660022195-B-B06.dcc",
+  "DSP-1001660022195-B-B05.dcc", "DSP-1001660022195-B-B04.dcc"
+)
+data <- data[ , -which(colnames(data) %in% remove)]
+# ------------------------------------------
+
 # ROI level QC.
 # -------------
 data <- shiftCountsOne(data, useDALogic = TRUE)
@@ -186,10 +195,9 @@ data
 ```{r}
 data <- SCTransform(data, verbose = FALSE)
 data <- RunPCA(data, npcs = 30, verbose = FALSE)
-data <- FindNeighbors(data, verbose = FALSE)
-data <- FindClusters(data, verbose = FALSE)
-data <- RunUMAP(data, dims = 1:30, verbose = FALSE)
+ElbowPlot(data, ndims = 30)
 
+data <- RunUMAP(data, dims = 1:5, verbose = FALSE)
 DimPlot(data, group.by = "genotype")
 ```
 
