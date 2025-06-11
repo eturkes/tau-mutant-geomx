@@ -54,7 +54,7 @@ div.main-container {max-width: none; width: 100%;}
 # Load packages.
 # --------------
 library(conflicted)
-packages <- c("GeomxTools", "Seurat")
+packages <- c("GeomxTools", "Seurat", "scales")
 invisible(
   suppressPackageStartupMessages(
     lapply(packages, FUN = library, character.only = TRUE)
@@ -118,6 +118,27 @@ data
 # Quality Control
 
 ```{r}
+data <- shiftCountsOne(data, useDALogic = TRUE) # Log-transform prerequisite.
+
+# Plot library size.
+# ------------------
+libsize <- colSums(exprs(data))
+df <- data.frame(
+  Sample = names(libsize),
+  LibrarySize = libsize,
+  Genotype = protocolData(data)$genotype
+)
+
+ggplot(df, aes(x = Sample, y = LibrarySize, fill = Genotype)) +
+  geom_col() +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Library Size by Sample", y = "Total Counts", x = "") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(breaks = pretty_breaks(n = 15), labels = comma) +
+  coord_cartesian(ylim = c(0, 1e5))
+# ------------------
+
 # Remove samples later known to be outliers.
 # ------------------------------------------
 remove <- c(
@@ -129,7 +150,6 @@ data <- data[ , -which(colnames(data) %in% remove)]
 
 # ROI level QC.
 # -------------
-data <- shiftCountsOne(data, useDALogic = TRUE)
 data <- setSegmentQCFlags(data, qcCutoffs = list(minSegmentReads = 30000))
 
 QC_results <- protocolData(data)$QCFlags
