@@ -77,7 +77,9 @@ knitr::opts_chunk$set(fig.width = 10, fig.height = 7, dpi = 96)
 # ----------------
 ```
 
-# Data Prep
+# First Pass
+
+## Data Prep
 
 ```{r}
 # Paths to data.
@@ -115,7 +117,7 @@ if (file.exists(rds)) {
 data
 ```
 
-# Quality Control
+## Quality Control
 
 ```{r}
 data <- shiftCountsOne(data, useDALogic = TRUE) # Log-transform prerequisite.
@@ -207,7 +209,7 @@ data <- normalize( # Normalize data.
 data.frame(assayData(data)$q_norm[1:5, 1:2])
 ```
 
-# Create Seurat Object
+## Create Seurat Object
 
 ```{r}
 data <- as.Seurat(data, normData = "q_norm")
@@ -220,7 +222,157 @@ data$genotype <- factor( # Rearrange order of labels.
 data
 ```
 
-# Dimensionality Reduction
+## Dimensionality Reduction
+
+```{r}
+data <- SCTransform(data, verbose = FALSE)
+data <- RunPCA(data, npcs = 30, verbose = FALSE)
+ElbowPlot(data, ndims = 30)
+
+data <- RunUMAP(data, dims = 1:5, verbose = FALSE)
+DimPlot(data, group.by = "genotype")
+```
+
+# Second Pass
+
+## Data Prep
+
+```{r}
+# Create NanoStringGeoMxSet.
+# --------------------------
+rds <- file.path(cache_dir, "data.rds") # Cache object due to slow execution.
+if (file.exists(rds)) {
+  data <- readRDS(rds)
+} else {
+  data <- suppressWarnings(
+    readNanoStringGeoMxSet(
+      dcc, pkc, anno,
+      phenoDataSheet = "Sheet1",
+      protocolDataColNames = c("genotype", "bio_rep", "tech_rep", "slide_rep")
+    )
+  )
+  saveRDS(data, file = rds)
+}
+# --------------------------
+
+data
+```
+
+## Quality Control
+
+```{r}
+data <- shiftCountsOne(data, useDALogic = TRUE) # Log-transform prerequisite.
+
+# Remove samples later known to be outliers.
+# ------------------------------------------
+remove <- c(
+  "DSP-1001660019825-A-H04.dcc", "DSP-1001660022195-B-B06.dcc",
+  "DSP-1001660022195-B-B05.dcc", "DSP-1001660022195-B-B04.dcc"
+)
+data <- data[ , -which(colnames(data) %in% remove)]
+# ------------------------------------------
+
+# Plot library size.
+# ------------------
+libsize <- colSums(exprs(data))
+df <- data.frame(
+  Sample = names(libsize),
+  LibrarySize = libsize,
+  Genotype = protocolData(data)$genotype
+)
+
+ggplot(df, aes(x = Sample, y = LibrarySize, fill = Genotype)) +
+  geom_col() +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Library Size by Sample", y = "Total Counts", x = "") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(breaks = pretty_breaks(n = 15), labels = comma) +
+  coord_cartesian(ylim = c(0, 1e5))
+# ------------------
+
+# ROI level QC.
+# -------------
+data <- setSegmentQCFlags(data, qcCutoffs = list(minSegmentReads = 20176))
+
+QC_results <- protocolData(data)$QCFlags
+QC_summary <- data.frame(
+  Pass = colSums(!QC_results[, colnames(QC_results)]),
+  Warning = colSums(QC_results[, colnames(QC_results)])
+)
+QC_results$Status <- apply(
+  QC_results, MARGIN = 1L, FUN = function(x) {
+    ifelse(sum(x) == 0L, yes = "PASS", no = "WARNING")
+  }
+)
+QC_summary["TOTAL FLAGS", ] <- c(
+  sum(QC_results[, "Status"] == "PASS"),
+  sum(QC_results[, "Status"] == "WARNING")
+)
+
+data <- data[, QC_results$LowReads == "FALSE"] # Only filter on library size.
+# -------------
+
+QC_summary
+
+# Plot library size.
+# ------------------
+libsize <- colSums(exprs(data))
+df <- data.frame(
+  Sample = names(libsize),
+  LibrarySize = libsize,
+  Genotype = protocolData(data)$genotype
+)
+
+ggplot(df, aes(x = Sample, y = LibrarySize, fill = Genotype)) +
+  geom_col() +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Library Size by Sample", y = "Total Counts", x = "") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(breaks = pretty_breaks(n = 15), labels = comma) +
+  coord_cartesian(ylim = c(0, 1e5))
+# ------------------
+
+# Probe level QC.
+# ---------------
+data <- setBioProbeQCFlags(data)
+
+QC_results <- fData(data)$QCFlags
+QC_summary <- data.frame(
+  Passed = sum(rowSums(QC_results[, -1]) == 0),
+  Global = sum(QC_results$GlobalGrubbsOutlier),
+  Local = sum(
+    rowSums(QC_results[, -2:-1]) > 0 & !QC_results$GlobalGrubbsOutlier
+  )
+)
+# ---------------
+
+QC_summary # No removal needed.
+
+data <- aggregateCounts(data) # Turn probe names into gene symbols.
+data.frame(assayData(data)$exprs[1:5, 1:2])
+
+data <- normalize( # Normalize data.
+  data, norm_method = "quant", desiredQuantile = 0.75, toElt = "q_norm"
+)
+data.frame(assayData(data)$q_norm[1:5, 1:2])
+```
+
+## Create Seurat Object
+
+```{r}
+data <- as.Seurat(data, normData = "q_norm")
+data <- RenameAssays(
+  data, assay.name = "GeoMx", new.assay.name = "RNA", verbose = FALSE
+)
+data$genotype <- factor( # Rearrange order of labels.
+  data$genotype, levels = c("MAPTKI", "P301S", "NLGF_MAPTKI", "NLGF_P301S")
+)
+data
+```
+
+## Dimensionality Reduction
 
 ```{r}
 data <- SCTransform(data, verbose = FALSE)
