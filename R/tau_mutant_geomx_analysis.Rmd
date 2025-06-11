@@ -139,18 +139,9 @@ ggplot(df, aes(x = Sample, y = LibrarySize, fill = Genotype)) +
   coord_cartesian(ylim = c(0, 1e5))
 # ------------------
 
-# Remove samples later known to be outliers.
-# ------------------------------------------
-remove <- c(
-  "DSP-1001660019825-A-H04.dcc", "DSP-1001660022195-B-B06.dcc",
-  "DSP-1001660022195-B-B05.dcc", "DSP-1001660022195-B-B04.dcc"
-)
-data <- data[ , -which(colnames(data) %in% remove)]
-# ------------------------------------------
-
 # ROI level QC.
 # -------------
-data <- setSegmentQCFlags(data, qcCutoffs = list(minSegmentReads = 30000))
+data <- setSegmentQCFlags(data, qcCutoffs = list(minSegmentReads = 20176))
 
 QC_results <- protocolData(data)$QCFlags
 QC_summary <- data.frame(
@@ -171,6 +162,25 @@ data <- data[, QC_results$LowReads == "FALSE"] # Only filter on library size.
 # -------------
 
 QC_summary
+
+# Plot library size.
+# ------------------
+libsize <- colSums(exprs(data))
+df <- data.frame(
+  Sample = names(libsize),
+  LibrarySize = libsize,
+  Genotype = protocolData(data)$genotype
+)
+
+ggplot(df, aes(x = Sample, y = LibrarySize, fill = Genotype)) +
+  geom_col() +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Library Size by Sample", y = "Total Counts", x = "") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(breaks = pretty_breaks(n = 15), labels = comma) +
+  coord_cartesian(ylim = c(0, 1e5))
+# ------------------
 
 # Probe level QC.
 # ---------------
